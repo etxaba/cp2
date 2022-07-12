@@ -1,0 +1,8 @@
+[master]
+20.26.224.81 nombre_dominio=master.cp2.com ip_interna=10.0.2.4
+
+[worker]
+20.26.225.133 nombre_dominio=worker.cp2.com ip_interna=10.0.2.5
+
+[nfs]
+20.26.229.151 nombre_dominio=nfs.cp2.com ip_interna=10.0.2.6
