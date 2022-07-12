@@ -7,7 +7,59 @@
   hosts: all
   remote_user: azureuser
   become: true
+  vars_files:
+    - vars.yaml
   tasks:
+    - name: 'Actualizar hostnames'
+      hostname:
+        name: "{{ nombre_dominio }}"
+    
+    - name: 'Actualizar /etc/hosts con las IPs de todos los host del inventario'
+      lineinfile:
+        dest: /etc/hosts
+        regexp: '.*{{ item }}$'
+        line: "{{ hostvars[item].ip_interna }} {{ hostvars[item].nombre_dominio }} {{ hostvars[item].ansible_facts.hostname }}"
+        state: present
+      with_items: "{{ groups.all }}"
+    
+    - name: 'Actualizacion del sistema operativo'
+      yum:
+        name: '*'
+        state: latest
+      notify: Reiniciar el nodo
+      
+    - name: 'Establecer timezone'
+      timezone:
+        name: "{{ zone }}"
+        
+    - name: Instalar Chrony.
+      yum:
+        name: chrony
+        state: latest
+          
+    - name: Verificar ejecución de Chrony
+      service:
+        name: chronyd
+        state: started
+        
+    - name: Instalar Firewalld
+      yum:
+        name: firewalld
+        state: latest
+          
+    - name: Start firewalld
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+        
+    - name: Deshabilitar SELinux
+      selinux:
+        state: disabled
+      notify: Reiniciar el nodo
+    
+      
+  
     - name: 'Obtener version de sistema operativo'
       shell: 'cat /etc/centos-release'
       register: os_version
@@ -20,3 +72,27 @@
       copy:
         content: "{{ os_version.stdout }}\n"
         dest: /tmp/os_version
+        
+    - name: 'Instalar master'
+      include_role:
+        name: role_master
+      when: inventory_hostname in groups['master']
+      tags: master
+
+    - name: 'Instalar worker'
+      include_role:
+        name: role_worker
+      when: inventory_hostname in groups['worker']
+      tags: worker
+      
+    - name: 'Instalar nfs'
+      include_role:
+        name: role_nfs
+      when: inventory_hostname in groups['nfs']
+      tags: nfs
+      
+  handlers:
+    - name: 'Reiniciar el nodo'
+      reboot:
+        pre_reboot_delay: 5
+        msg: 'Reinicio iniciado por Ansible'
