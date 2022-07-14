@@ -1,6 +1,9 @@
 ---
 # tasks file for role_worker
 
+- name: 'Reiniciar el worker'
+  reboot:
+  
 - name: FirewallD abrir puertos
   firewalld:
     permanent: yes
@@ -16,21 +19,15 @@
    
    
 - name: 'Imprimir token conexion'
-  debug: "{{ hostvars['DUMMY_HOST']['TOKEN_NUEVO'] }}"
+  debug: 
+    msg: "{{ hostvars['DUMMY_HOST']['TOKEN_NUEVO'] }}"
     
 
 - name: Anadir el worker al cluster de kubernetes
-  shell: "{{ token }}"
+  shell: "{{ hostvars['DUMMY_HOST']['TOKEN_NUEVO'] }}"
   register: add_worker
   
 - name: 'Imprimir resultado de add worker'
   debug:
     var: add_worker
     
-- name: Obtener nodos
-  shell: kubectl get nodes
-  register: nodos
-  
-- name: 'Imprimir nodos'
-  debug:
-    var: nodos

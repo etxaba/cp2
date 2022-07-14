@@ -1,2 +1,5 @@
 ---
 # vars file for role_nfs
+share: "/mnt/share"
+options: "10.0.2.0/24(rw,sync,root_squash)"
+permission: '0777'

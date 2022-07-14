@@ -223,3 +223,9 @@
       reboot:
         pre_reboot_delay: 5
         msg: 'Reinicio iniciado por Ansible'
+        
+    - name: restart NFS server
+      service:
+        name: nfs-server
+        state: restarted
+        enabled: true

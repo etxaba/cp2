@@ -42,13 +42,16 @@
  
 - set_fact:
     #my_var: "{{ init_cluster.stdout | regex_search('Then you can join any number of worker nodes by running the following on each as root:=(.+)', '\\1') | first }}"
-    token: "{{init_cluster.stdout_lines[-2:] }}"
+    token: |
+            {{ init_cluster.stdout_lines[-2] }}
+            {{ init_cluster.stdout_lines[-1] }}
     
 - name: 'Imprimir token conexion'
   debug:
     var: token
     
 - name: 'Registrar variable token para poder acceder desde el otro rol'
+  #set_fact: token_nuevo="{{ token }}"
   add_host:
     name: "DUMMY_HOST"
     TOKEN_NUEVO: "{{ token }}"
