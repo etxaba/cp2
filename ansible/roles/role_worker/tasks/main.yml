@@ -1,2 +1,36 @@
 ---
 # tasks file for role_worker
+
+- name: FirewallD abrir puertos
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{item.port}}/{{item.proto}}"
+    state: "{{item.state}}"
+    zone: "{{item.zone}}"
+  with_items:
+   - {port: "8285", proto: "udp", state: "enabled", zone: "public" }
+   - {port: "8472", proto: "udp", state: "enabled", zone: "public" }
+   - {port: "10250", proto: "tcp", state: "enabled", zone: "public" }
+   - {port: "30000-32767", proto: "tcp", state: "enabled", zone: "public" }
+   
+   
+- name: 'Imprimir token conexion'
+  debug: "{{ hostvars['DUMMY_HOST']['TOKEN_NUEVO'] }}"
+    
+
+- name: Anadir el worker al cluster de kubernetes
+  shell: "{{ token }}"
+  register: add_worker
+  
+- name: 'Imprimir resultado de add worker'
+  debug:
+    var: add_worker
+    
+- name: Obtener nodos
+  shell: kubectl get nodes
+  register: nodos
+  
+- name: 'Imprimir nodos'
+  debug:
+    var: nodos

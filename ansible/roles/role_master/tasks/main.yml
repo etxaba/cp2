@@ -1,17 +1,117 @@
 ---
 # tasks file for role_master
 
-- name: 'Establecer nombre de host'
-  hostname:
-    name: "{{ nombre_dominio }}"
-    use: systemd
-  tags: master
+- name: FirewallD abrir puertos
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{item.port}}/{{item.proto}}"
+    state: "{{item.state}}"
+    zone: "{{item.zone}}"
+  with_items:
+   - {port: "6443", proto: "tcp", state: "enabled", zone: "public" }
+   - {port: "2379-2380", proto: "tcp", state: "enabled", zone: "public" }
+   - {port: "10250", proto: "tcp", state: "enabled", zone: "public" }
+   - {port: "10251", proto: "tcp", state: "enabled", zone: "public" }
+   - {port: "10252", proto: "tcp", state: "enabled", zone: "public" }
+   - {port: "10255", proto: "tcp", state: "enabled", zone: "public" }
+   
+- name: Permitir en el cortafuegos las conexiones desde cada nodo worker
+  firewalld:
+    permanent: yes
+    immediate: yes
+    rich_rule: "{{ item }}"
+    state: enabled
+  with_items:
+   - 'rule family=ipv4 source address={{ IP_WORKER }}/32 port port=6443 protocol=tcp accept'
+   
+- name: Configurar kubeadm
+  command: kubeadm config images pull
+  ignore_errors: no
 
-- name: 'Establecer IP interna'
-  set_fact:
-    ip_interna: "{{ ansible_facts['default_ipv4']['address'] }}"
-  tags: master
+- name: Reset Kubernetes Cluster
+  shell: kubeadm reset --force
+  
+- name: Initialize Kubernetes Cluster
+  shell: kubeadm init --pod-network-cidr 10.0.0.0/16
+  register: init_cluster
+  
+- name: 'Imprimir valor de Initialize Kubernetes Cluster'
+  debug:
+    var: init_cluster
+ 
+- set_fact:
+    #my_var: "{{ init_cluster.stdout | regex_search('Then you can join any number of worker nodes by running the following on each as root:=(.+)', '\\1') | first }}"
+    token: "{{init_cluster.stdout_lines[-2:] }}"
+    
+- name: 'Imprimir token conexion'
+  debug:
+    var: token
+    
+- name: 'Registrar variable token para poder acceder desde el otro rol'
+  add_host:
+    name: "DUMMY_HOST"
+    TOKEN_NUEVO: "{{ token }}"
 
-- debug:
-    var: ip_interna
-  tags: master
+- name: Create .kube directory
+  file: 
+    path: $HOME/.kube
+    state: directory
+    owner: azureuser
+    group: azureuser
+    mode: 0775
+
+- name: Copy default cluster configuration
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: $HOME/.kube/config
+    remote_src: yes
+    owner: azureuser
+    group: azureuser
+    mode: 0660    
+
+- name: Change config mode
+  file:
+    path: $HOME/.kube/config
+    state: file
+    owner: azureuser
+    group: azureuser 
+    mode: 0660
+    
+- name: Obtener nodos
+  shell: kubectl get nodes
+  register: nodos
+  
+- name: 'Imprimir nodos'
+  debug:
+    var: nodos
+
+#- name: Put template kubelet file
+#  template: 
+#    src: kubelet-config.yml.j2
+#    dest: /var/lib/kubelet/config.yaml
+#    owner: root
+#    group: root 
+#    mode: 0777
+
+- name: Permitir el tráfico en el cortafuegos del master y workers
+  firewalld:
+    permanent: yes
+    immediate: yes
+    port: "{{item.port}}/{{item.proto}}"
+    state: "{{item.state}}"
+    zone: "{{item.zone}}"
+  with_items:
+   - {port: "8285", proto: "udp", state: "enabled", zone: "public" }
+   - {port: "8472", proto: "udp", state: "enabled", zone: "public" }
+   
+   
+- name: Aplicamos la definción de las políticas de red en el nodo master
+  shell: kubectl apply -f https://docs.projectcalico.org/manifests/canal.yaml
+
+
+- name: 'Reiniciar el master'
+  reboot:
+
+- name: Instalación del Ingress Controller (HAProxy)
+  shell: kubectl apply -f https://raw.githubusercontent.com/haproxytech/kubernetes-ingress/master/deploy/haproxy-ingress.yaml
