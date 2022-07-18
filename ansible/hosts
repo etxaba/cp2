@@ -1,11 +1,9 @@
 [master]
-51.132.35.147 nombre_dominio=master.cp2.com ip_interna=10.0.2.6
+20.254.103.33 nombre_dominio=master.cp2.com ip_interna=10.0.2.5
 
 [worker]
-51.132.35.198 nombre_dominio=worker.cp2.com ip_interna=10.0.2.4
+20.254.103.53 nombre_dominio=worker.cp2.com ip_interna=10.0.2.4
 
 [nfs]
-51.132.35.152 nombre_dominio=nfs.cp2.com ip_interna=10.0.2.5
+20.254.96.127 nombre_dominio=nfs.cp2.com ip_interna=10.0.2.6
 
-[all:vars]
-token=""

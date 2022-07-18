@@ -1,0 +1,16 @@
+---
+- name: 'Realiza el despliegue de la app sobre kubernetes'
+  hosts: all
+  remote_user: azureuser
+  become: true
+  vars_files:
+    - vars.yaml
+  tasks:
+  
+   - name: 'Instalar app'
+     include_role:
+        name: role_app
+     when: inventory_hostname in groups['master']
+     tags: app
+
+

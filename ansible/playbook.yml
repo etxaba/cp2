@@ -198,7 +198,6 @@
         state: started
         name: kubelet
    
-
          
     - name: 'Instalar master'
       include_role:
