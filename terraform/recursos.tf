@@ -1,6 +1,6 @@
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
-  location = var.location_name
+  location = var.location
 }
 
 resource "azurerm_virtual_network" "vnet" {
@@ -81,8 +81,8 @@ resource "azurerm_linux_virtual_machine" "vmmaster" {
   ]
 
   admin_ssh_key {
-    username   = "azureuser"
-    public_key = file("~/.ssh/id_rsa.pub")
+    username   = var.ssh_user
+    public_key = file(var.public_key_path)
   }
 
   os_disk {

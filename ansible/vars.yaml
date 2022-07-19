@@ -1,8 +1,7 @@
 zone: 'Europe/Madrid'
 os: "CentOS_8_Stream"
 version: "1.24"
-IP_WORKER: "20.254.103.53"
-IP_NFS: "20.254.96.127"
+IP_WORKER: "20.254.95.212"
+IP_NFS: "13.87.86.51"
 token: ""
-
 files: ['mongodb-secrets.yaml','mongodb-pvc.yaml','mongodb-deployment.yaml']

@@ -1,9 +1,12 @@
+[all:vars]
+ansible_user=azureuser
+
 [master]
-20.254.103.33 nombre_dominio=master.cp2.com ip_interna=10.0.2.5
+20.254.95.174 nombre_dominio=master.cp2.com ip_interna=10.0.2.5
 
 [worker]
-20.254.103.53 nombre_dominio=worker.cp2.com ip_interna=10.0.2.4
+20.254.95.212 nombre_dominio=worker.cp2.com ip_interna=10.0.2.4
 
 [nfs]
-20.254.96.127 nombre_dominio=nfs.cp2.com ip_interna=10.0.2.6
+13.87.86.51 nombre_dominio=nfs.cp2.com ip_interna=10.0.2.6
 
